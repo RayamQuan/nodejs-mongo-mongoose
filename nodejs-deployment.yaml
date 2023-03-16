@@ -34,22 +34,29 @@ spec:
         - name: MONGO_HOSTNAME
           value: db
         - name: MONGO_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: MONGO_PASSWORD
         - name: MONGO_PORT
           valueFrom:
             configMapKeyRef:
               key: MONGO_PORT
               name: nodejs-env
         - name: MONGO_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: MONGO_USERNAME
         image: virgoinvincible/node-kubernetes
         name: nodejs
         ports:
         - containerPort: 8080
         resources: {}
-        volumeMounts:
-        - mountPath: /home/node/app
-          name: nodejs-claim0
-        - mountPath: /home/node/app/node_modules
-          name: node-modules
+      initContainers:
+      - name: init-db
+        image: busybox
+        command: ['sh', '-c', 'until nc -z db:27017; do echo waiting for db; sleep 2; done;']
       restartPolicy: Always
       volumes:
       - name: nodejs-claim0
